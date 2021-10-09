@@ -20,7 +20,7 @@ module "vpc" {
 }
 
 module "ec2_instance" {
-  source = "../EC2"
+  source = "./EC2"
   security_group = module.vpc.SG_dev_VPC
   pub_subnet = module.vpc.dev_public_subnet
 }
