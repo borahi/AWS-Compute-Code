@@ -27,7 +27,7 @@ module "target_group" {
   dev_vpc = module.vpc.aws_vpc_id
   pub_subnet01 = module.vpc.vpc_subnet001
   pub_subnet02 = module.vpc.vpc_subnet002
-
+  LB_arn = module.ALB.Dev_alb_arn
   
 }
 
@@ -36,5 +36,6 @@ module "ASG" {
   pub_subnet01 = module.vpc.vpc_subnet001
   pub_subnet02 = module.vpc.vpc_subnet002
   dev_vpc = module.vpc.aws_vpc_id
-
+  LB_arn = module.ALB.Dev_alb_arn
+ 
 }
