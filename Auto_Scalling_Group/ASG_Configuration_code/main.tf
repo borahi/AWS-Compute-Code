@@ -98,29 +98,8 @@ resource "aws_lb_target_group" "dev_TG001" {
   
 }
 
-
-############## to attach the Target group to the ALB listener #################
-### In my case I have already created ALB so giving ARN only otherwise we can create ALB via the code also #########
-/*
-@@@@@@@@@@@@@@  Code to create ALB  @@@@@@@@@@@@@@@@@
-
-
-resource "aws_lb" "Dev-LB001" {
-  name = "Dev-Application-LB001"
-  internal = false
-  ip_address_type = "ipv4"
-  subnets = [var.pub_subnet01, var.pub_subnet02]
-  load_balancer_type = "application"
-  security_groups = [aws_security_group.Dev_LBSecurity001.id]
-
-
-
-}
-
-*/
-
 resource "aws_alb_listener" "Dev-LB001-listener" {
-  load_balancer_arn = "arn:aws:elasticloadbalancing:us-east-1:971647307586:loadbalancer/app/Dev-Application-LB001/2897192602b1483b"
+  load_balancer_arn = var.LB_arn
   port = 80
   protocol = "HTTP"
 
