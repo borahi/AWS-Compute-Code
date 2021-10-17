@@ -1,69 +1,50 @@
-
 provider "aws" {
   region = "us-east-1"
+
 }
 
 
-resource "aws_db_instance" "dev-rds-mariadb001" {
-    engine = "mariadb"
-    engine_version = "10.5.12"
-    name = "mymariadb"
-    multi_az = false
-    username = "admin"
-    password = "xxxxxxxxxx"
-    allocated_storage = 10
-    instance_class = "db.t2.micro"
-    storage_type = "gp2"
-    backup_retention_period = 10
-    backup_window = "11:00-12:00"
-    db_subnet_group_name = aws_db_subnet_group.my-rds-db-subnet.name
-    vpc_security_group_ids = [ aws_security_group.rds_Security002.id ]
+module "vpc" {
+  source   = "./sample_vpc_code"
+  vpc_cidr = "10.0.204.0/23"
+  pvt_cidr = ["10.0.204.128/26", "10.0.204.192/26"]
+  pub_cidr = ["10.0.204.0/26", "10.0.204.64/26"]
+}
 
+
+
+module "ALB" {
+  source       = "./Load_balancer_only"
+  aws_vpc_net  = module.vpc.aws_vpc_id
+  pub_subnet01 = module.vpc.vpc_subnet001
+  pub_subnet02 = module.vpc.vpc_subnet002
+
+
+}
+
+
+module "target_group" {
+  source = "./ASG_Launchconfiguration_code"
+  dev_vpc = module.vpc.aws_vpc_id
+  pub_subnet01 = module.vpc.vpc_subnet001
+  pub_subnet02 = module.vpc.vpc_subnet002
+  LB_arn = module.ALB.Dev_alb_arn
   
 }
 
-resource "aws_db_subnet_group" "my-rds-db-subnet" {
-  name       = "my-rds-db-subnet"
-  subnet_ids = [var.rds_subnet1, var.rds_subnet2]
+module "ASG" {
+  source = "./ASG_LaunchConfiguration_code"
+  pub_subnet01 = module.vpc.vpc_subnet001
+  pub_subnet02 = module.vpc.vpc_subnet002
+  dev_vpc = module.vpc.aws_vpc_id
+  LB_arn = module.ALB.Dev_alb_arn
+ 
 }
 
-
-resource "aws_security_group" "rds_Security002" {
-  vpc_id = var.dev_vpc
-
-  tags = {
-    "Name" = "BU1_LB-vpc_SG01"
-  }
-
-  ingress = [{
-    "cidr_blocks" : [
-      "0.0.0.0/0"
-    ],
-    "description" : "ssh access to the machine",
-    "from_port" : 3306,
-    "ipv6_cidr_blocks" : [],
-    "prefix_list_ids" : [],
-    "protocol" : "tcp",
-    "security_groups" : [],
-    "self" : false,
-    "to_port" : 3306
-
-  }]
-
-
-  egress = [
-    {
-      "cidr_blocks" : [
-        "0.0.0.0/0"
-      ],
-      "description" : "",
-      "from_port" : 0,
-      "ipv6_cidr_blocks" : [],
-      "prefix_list_ids" : [],
-      "protocol" : "-1",
-      "security_groups" : [],
-      "self" : false,
-      "to_port" : 0
-  }]  
-
+module "RDS-mariadb" {
+  source = "./RDS"
+  rds_subnet1 = module.vpc.vpc_pvtsubnet001
+  rds_subnet2 = module.vpc.vpc_pvtsubnet002
+  dev_vpc = module.vpc.aws_vpc_id
+  
 }
